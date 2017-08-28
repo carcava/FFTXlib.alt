@@ -991,9 +991,6 @@ SUBROUTINE task_groups_init_first( desc, nyfft )
     desc%nolist( itsk + 1 ) = desc%mype
     CALL MPI_ALLREDUCE(MPI_IN_PLACE, desc%nolist, desc%nogrp, MPI_INTEGER, MPI_SUM, desc%ogrp_comm, ierr)
 
-    desc%mype2  = itsk
-    desc%nproc2 = desc%nogrp
-    desc%comm2 = desc%ogrp_comm
 #endif
     !
     !CREATE PLANEWAVE GROUPS

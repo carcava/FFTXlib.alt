@@ -254,6 +254,26 @@ CONTAINS
      fftx_ntgrp = desc%nogrp
   END FUNCTION
 
+  PURE FUNCTION fftx_tgpe( desc )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     INTEGER :: fftx_tgpe
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     INTEGER : idx
+     DO idx = 1, desc%nogrp
+        IF( desc%nolist( idx ) == desc%mype ) EXIT
+     END DO
+     fftx_tgpe = idx - 1
+  END FUNCTION
+
+  PURE FUNCTION fftx_tgcomm( desc )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     INTEGER :: fftx_tgcomm
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     fftx_tgcomm = desc%ogrp_comm
+  END FUNCTION
+
   SUBROUTINE fftx_add_field( r, f, desc )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
