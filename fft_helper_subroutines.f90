@@ -259,7 +259,7 @@ CONTAINS
      USE fft_types,      ONLY : fft_type_descriptor
      INTEGER :: fftx_tgpe
      TYPE(fft_type_descriptor), INTENT(in) :: desc
-     INTEGER : idx
+     INTEGER :: idx
      DO idx = 1, desc%nogrp
         IF( desc%nolist( idx ) == desc%mype ) EXIT
      END DO
