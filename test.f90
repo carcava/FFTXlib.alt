@@ -25,8 +25,10 @@ program test
   !! To compile the test program, once you have properly edit the make.sys file
   !! included in the FFTXlib and type:
   !!
-  !!      make
   !!      make TEST
+  !!      
+  !! N.B.: do not run the make command alone, otherwise the FFT times will
+  !!       not be present in the final summary.
   !!
   !! Then you can run your FFT tests using command like:
   !!
