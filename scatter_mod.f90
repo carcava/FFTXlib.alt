@@ -104,7 +104,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 
   use_tg_ = .false.
 
-  IF( dfft%have_task_groups ) use_tg_ = .true.
+  IF( dfft%has_task_groups ) use_tg_ = .true.
   IF( abs(isgn) == 1 ) use_tg_ = .false.
 
   me     = dfft%mype + 1
@@ -419,7 +419,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 
   use_tg_ = .false.
 
-  IF( dfft%have_task_groups ) use_tg_ = .true.
+  IF( dfft%has_task_groups ) use_tg_ = .true.
   IF( abs(isgn) == 1 ) use_tg_ = .false.
 
   IF( .NOT. ALLOCATED( scra ) ) THEN

@@ -88,7 +88,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
   LOGICAL                    :: use_tg
   !
   !
-  use_tg = dfft%have_task_groups
+  use_tg = dfft%has_task_groups
   if( abs(isgn) == 1 ) use_tg = .FALSE.
   !
   n1  = dfft%nr1

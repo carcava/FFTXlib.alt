@@ -1,13 +1,13 @@
 # Makefile for FFTXlib
 
--include ./make.inc
--include ../make.inc
+include ../make.inc
 
 # location of needed modules
 #MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG).
 
 FFTX = \
 scatter_mod.o  \
+fft_ggen.o  \
 fft_fwinv.o  \
 fft_scalar.o  \
 fft_scalar.ARM_LIB.o  \
@@ -41,8 +41,6 @@ fft_scalar.o : fft_scalar.f90  fft_scalar.FFTW3.f90  fft_scalar.FFTW.f90  fft_sc
 
 
 fft_stick.o : fft_stick.c fftw.c fftw.h konst.h
-
-TEST : F90FLAGS:=$(F90FLAGS) -D__FFT_CLOCKS
 
 TEST : test.o libqefft.a
 	$(LD) $(LDFLAGS) -o fft_test.x test.o libqefft.a $(LIBS)

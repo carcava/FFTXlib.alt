@@ -50,6 +50,14 @@ MODULE fft_types
                            ! Not to be confused either with nr1*nr2*nr3 
     INTEGER, ALLOCATABLE :: ngl(:)   ! per proc. no. of non zero charge density/potential components
     INTEGER, ALLOCATABLE :: nwl(:)   ! per proc. no. of non zero wave function plane components
+    INTEGER :: ngm  ! my no. of non zero charge density/potential components
+                    !    ngm = dfftp%ngl( dfftp%mype + 1 )
+                    ! with gamma sym.
+                    !    ngm = ( dfftp%ngl( dfftp%mype + 1 ) + 1 ) / 2
+    INTEGER :: ngw  ! my no. of non zero wave function plane components
+                    !    ngw = dffts%nwl( dffts%mype + 1 )
+                    ! with gamma sym.
+                    !    ngw = ( dffts%nwl( dffts%mype + 1 ) + 1 ) / 2
     INTEGER, ALLOCATABLE :: npp(:)   ! number of "Z" planes per processor
     INTEGER, ALLOCATABLE :: ipp(:)   ! offset of the first "Z" plane on each proc ( 0 on the first proc!!!)
     INTEGER, ALLOCATABLE :: iss(:)   ! index of the first rho stick on each proc
@@ -57,6 +65,8 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
     INTEGER, ALLOCATABLE :: iplp(:)  ! indicate which "Y" plane should be FFTed ( potential )
     INTEGER, ALLOCATABLE :: iplw(:)  ! indicate which "Y" plane should be FFTed ( wave func )
+    INTEGER, ALLOCATABLE :: nl(:)    ! position of the G vec in the FFT grid
+    INTEGER, ALLOCATABLE :: nlm(:)   ! with gamma sym. position of -G vec in the FFT grid
     !
     !  fft parallelization
     !
@@ -79,11 +89,12 @@ MODULE fft_types
     INTEGER :: root     = 0          ! root processor
     LOGICAL :: lpara    = .FALSE.
     !
+    CHARACTER(len=12):: rho_clock_label  = ' '
+    CHARACTER(len=12):: wave_clock_label = ' '
 
-        !
         !  task groups
         !
-        LOGICAL :: have_task_groups = .FALSE.
+        LOGICAL :: has_task_groups = .FALSE.
         !
         INTEGER :: me_pgrp   = 0          ! task id for plane wave task group
         INTEGER :: nogrp     = 1          ! number of proc. in an orbital "task group"
@@ -112,6 +123,7 @@ MODULE fft_types
 
   PUBLIC :: fft_type_descriptor, fft_type_init
   PUBLIC :: fft_type_allocate, fft_type_deallocate
+  PUBLIC :: fft_stick_index
 
 CONTAINS
 
@@ -238,6 +250,8 @@ CONTAINS
     IF ( ALLOCATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
     IF ( ALLOCATED( desc%i0r3p ) )  DEALLOCATE( desc%i0r3p )
     IF ( ALLOCATED( desc%nr3p ) )  DEALLOCATE( desc%nr3p )
+    IF ( ALLOCATED( desc%nl ) )  DEALLOCATE( desc%nl )
+    IF ( ALLOCATED( desc%nlm ) ) DEALLOCATE( desc%nlm )
 #if defined(__MPI)
     desc%comm = MPI_COMM_NULL 
 #endif
@@ -256,7 +270,7 @@ CONTAINS
     IF ( ALLOCATED( desc%tg_psdsp ) )   DEALLOCATE( desc%tg_psdsp )
     IF ( ALLOCATED( desc%tg_usdsp ) )   DEALLOCATE( desc%tg_usdsp )
     IF ( ALLOCATED( desc%tg_rdsp ) )   DEALLOCATE( desc%tg_rdsp )
-    desc%have_task_groups = .FALSE.
+    desc%has_task_groups = .FALSE.
   END SUBROUTINE fft_type_deallocate
 
 !=----------------------------------------------------------------------------=!
@@ -657,6 +671,20 @@ CONTAINS
 
      CALL task_groups_init( dfft, nyfft )
 
+     dfft%ngw = dfft%nwl( dfft%mype + 1 )
+     dfft%ngm = dfft%ngl( dfft%mype + 1 )
+     IF( lgamma ) THEN
+        dfft%ngw = (dfft%ngw + 1)/2
+        dfft%ngm = (dfft%ngm + 1)/2
+     END IF
+
+     IF( dfft%ngw /= ngw ) THEN
+        CALL fftx_error__(' fft_type_init ', ' wrong ngw ', 1 )
+     END IF
+     IF( dfft%ngm /= ngm ) THEN
+        CALL fftx_error__(' fft_type_init ', ' wrong ngm ', 1 )
+     END IF
+
      DEALLOCATE( st )
      DEALLOCATE( stw )
      DEALLOCATE( nstp )
@@ -793,6 +821,20 @@ CONTAINS
       RETURN
    
    END SUBROUTINE grid_set
+
+   PURE FUNCTION fft_stick_index( desc, i, j )
+      IMPLICIT NONE
+      TYPE(fft_type_descriptor), INTENT(IN) :: desc
+      INTEGER :: fft_stick_index
+      INTEGER, INTENT(IN) :: i, j
+      INTEGER :: mc, m1, m2
+      m1 = mod (i, desc%nr1) + 1
+      IF (m1 < 1) m1 = m1 + desc%nr1
+      m2 = mod (j, desc%nr2) + 1
+      IF (m2 < 1) m2 = m2 + desc%nr2
+      mc = m1 + (m2 - 1) * desc%nr1x
+      fft_stick_index = desc%isind ( mc )
+   END FUNCTION
 
 !
 
@@ -947,7 +989,7 @@ SUBROUTINE task_groups_init_first( desc, nyfft )
     !SUBDIVIDE THE PROCESSORS IN GROUPS
     !
     ! should be initialized outside, before calling fft_type_init
-    ! desc%have_task_groups = ( nogrp > 1 )
+    ! desc%has_task_groups = ( nogrp > 1 )
     !
     desc%me_pgrp = 0
 

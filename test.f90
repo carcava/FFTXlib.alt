@@ -126,7 +126,7 @@ program test
   integer :: nargs
   CHARACTER(LEN=80) :: arg
   !
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   INTEGER :: PROVIDED
 #endif
   !
@@ -172,7 +172,7 @@ program test
 
 #if defined(__MPI)
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
 #else
   CALL MPI_Init(ierr)
@@ -263,8 +263,8 @@ program test
   end if
   !
   IF (gamma_only) incr = 2
-  dffts%have_task_groups = (ntgs > 1)
-  use_tg = dffts%have_task_groups
+  dffts%has_task_groups = (ntgs > 1)
+  use_tg = dffts%has_task_groups
   !
   CALL fft_type_init(dffts, smap, "wave", gamma_only, .true., comm, at, bg, gkcut, gcutms/gkcut, nyfft=ntgs)
   CALL fft_type_init(dfftp, smap, "rho", gamma_only, .true., comm, at, bg, gcutm, 4.d0, nyfft=ntgs)
